@@ -8,7 +8,7 @@ public class App implements Directions {
     }
     
     public static void main(String[] args) throws Exception {
-        Robot bot1 = new Robot(1, 1, East, 2);
+        Robot bot1 = new Robot(1, 10, East, 2);
         for (int i = 0; i < 10; i++) {
             bot1.move();
         }
