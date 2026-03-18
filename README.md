@@ -6,7 +6,7 @@ A path generation web app for the "Karel The Robot" Java library. It's designed 
 
 This tool should be used to explore different solutions and to learn programming concepts.
 
-It should not be misused to take unnecessary shortcuts.
+It should not be misused to replace problem solving skills or violate any policies.
 
 I am not responsible for any misuse - creator.
 
