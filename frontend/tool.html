@@ -90,7 +90,7 @@
             c.style.width = "100cqw";
             c.style.height = "100cqh";
             let ctx = c.getContext('2d');
-            let imgRoot = "images/"
+            let imgRoot = "/frontend/images/"
             let source = [
                 "robot_north",
                 "robot_south",
@@ -109,6 +109,7 @@
                     this.numBeepers = numBeepers; // can be Inifnity
                     this.color = color;
                     this.history = []
+                    this.isSprinting = false;
                 }
                 getPose() {
                     return [this.x, this.y];
@@ -121,6 +122,10 @@
                     }
                 }
                 move() {
+                    if (this.isSprinting) {
+                        this.isSprinting = false;
+                        this.move();
+                    }
                     if (this.direction === "n") {
                         this.y += 1;
                         this.resetIntersection(Intersection.city, 0, -1);
@@ -135,11 +140,36 @@
                         this.x -= 1;
                         this.resetIntersection(Intersection.city, 1, 0);
                     }
+                    if (this.x >= 0 && this.x < Intersection.avenues && this.y >= 0 && this.y < Intersection.streets) {
+                        this.history.push("m");
+                    } else {
+                        this.x = Math.max(0, Math.min(Intersection.avenues-1, this.x));
+                        this.y = Math.max(0, Math.min(Intersection.streets-1, this.y));
+                    }
                     this.resetIntersection(Intersection.city, 0, 0);
-                    this.history.push("m");
-                    console.log(robot.direction);
+                    console.log(`Direction = ${this.direction}, Coords = ${this.x}, ${this.y}`);
+                }
+
+                uTurn() {
+                    if (this.direction === "n") {
+                        this.direction = "s";
+                    } else if (this.direction === "s") {
+                        this.direction = "n";
+                    } else if (this.direction === "e") {
+                        this.direction = "w";
+                    } else {
+                        this.direction = "e";
+                    }
+                    this.history.push("t");
+                    this.history.push("t");
+                    this.resetIntersection(Intersection.city, 0, 0);
                 }
                 turnRight() {
+                    if (this.isSprinting) {
+                        this.isSprinting = false;
+                        this.uTurn();
+                        return;
+                    }
                     if (this.direction === "n") {
                         this.direction = "e";
                     } else if (this.direction === "s") {
@@ -150,8 +180,16 @@
                         this.direction = "n";
                     }
                     this.history.push("t");
+                    this.history.push("t");
+                    this.history.push("t");
+                    this.resetIntersection(Intersection.city, 0, 0);
                 }
                 turnLeft() {
+                    if (this.isSprinting) {
+                        this.isSprinting = false;
+                        this.uTurn();
+                        return;
+                    }
                     if (this.direction === "n") {
                         this.direction = "w";
                     } else if (this.direction === "s") {
@@ -162,16 +200,32 @@
                         this.direction = "s";
                     }
                     this.history.push("t");
-                    this.history.push("t");
-                    this.history.push("t");
+                    this.resetIntersection(Intersection.city, 0, 0);
                 }
                 putBeeper() {
                     Intersection.city[this.y][this.x].increaseBeeper(1);
                     this.history.push("b");
+                    this.resetIntersection(Intersection.city, 0, 0);
                 }
                 pickBeeper() {
                     success = Intersection.city[this.y][this.x].decreaseBeeper(1);
                     if (success) this.history.push("b");
+                    this.resetIntersection(Intersection.city, 0, 0);
+                }
+                draw(center, blockWidth) {
+                    if (this.direction === "n") {
+                        var img = images["robot_north"]
+                    } else if (this.direction == "s") {
+                        var img = images["robot_south"]
+                    } else if (this.direction == "e") {
+                        var img = images["robot_east"]
+                    } else {
+                        var img = images["robot_west"]
+                    }
+                    let botWidth = 0.7;
+                    let area = blockWidth * 0.7;
+                    let top_corner = [center[0]-0.5*area, center[1]-0.5*area];
+                    ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
                 }
             }
 
@@ -227,11 +281,12 @@
                     c.style.width = `${100*newAvenues/Math.max(newAvenues, newStreets)}cqw`;
                     c.style.height = `${100*newStreets/Math.max(newAvenues, newStreets)}cqh`;
 
+                    if (Intersection.city.length > 0) {
+                        Intersection.city = Intersection.city.slice(0, newStreets);
 
-                    Intersection.city = Intersection.city.slice(0, newStreets);
-
-                    for (let i = 0; i < newStreets; i++) {
-                        Intersection.city[i] = Intersection.city[i].slice(0, newAvenues);
+                        for (let i = 0; i < newStreets; i++) {
+                            Intersection.city[i] = Intersection.city[i].slice(0, newAvenues);
+                        }
                     }
 
 
@@ -305,7 +360,7 @@
                 }
                 decreaseBeeper(num) {
                     if (num <= this.numBeepers) {
-                        this.numBeepers -= nums;
+                        this.numBeepers -= num;
                         return true;
                     } else {
                         return false;
@@ -328,7 +383,7 @@
                 position(x, y) {
                     let center = [this.coords[0]+Intersection.blockWidth/2, this.coords[1]+Intersection.blockWidth/2];
                     let length = Intersection.blockWidth;
-                    return [(center[0]+x*length*0.5), (center[1]+y*length*0.5)];
+                    return [(center[0]+x*length*0.5), (center[1]+(-y*length)*0.5)];
                 }
                 minX() {
                     return this.coords[0];
@@ -345,6 +400,8 @@
                 draw() {
                     let center = this.position(0, 0);
                     let top_left = this.position(-1, 1);
+                    let top_right = this.position(1, 1);
+                    //top_left = [this.minX(), this.minY()];
                     // Draw the default grid lines
                     ctx.beginPath();
                     ctx.strokeStyle = "red";
@@ -358,13 +415,13 @@
 
                     // Draw the robot if robot is on its square
                     if (this.hasRobot) {
-                        ctx.beginPath();
-                        ctx.fillStyle = "white";
-                        ctx.strokeStyle = "black";
-                        ctx.arc(this.position(0, 0)[0], this.position(0, 0)[1], this.width/4, 0, Math.PI*2);
-                        //robot.draw(center, blockWidth);
-                        ctx.stroke();
-                        ctx.fill();
+                        // ctx.beginPath();
+                        // ctx.fillStyle = "white";
+                        // ctx.strokeStyle = "black";
+                        // ctx.arc(this.position(0, 0)[0], this.position(0, 0)[1], this.width/4, 0, Math.PI*2);
+                        robot.draw(center, this.width);
+                        // ctx.stroke();
+                        // ctx.fill();
                     }
 
                     // Draw horizontal wall
@@ -383,23 +440,31 @@
                         let height = this.width;
 
                         ctx.drawImage(img, top_left[0], top_left[1], width, height);
+                        console.log();
                     }
                     
                     // Draw beeper
                     if (this.numBeepers >= 1) {
+                        ctx.beginPath();
+                        ctx.fillStyle = "white";
+                        ctx.strokeStyle = "black";
+                        ctx.arc(this.position(0, 0)[0], this.position(0, 0)[1], this.width/4, 0, Math.PI*2);
+                        ctx.stroke();
+                        ctx.fill();
+
                         let img = images["beeper"]
                         let width = this.width/2;
                         let height = this.width/2;
 
                         ctx.drawImage(img, top_left[0]+width/2, top_left[1]+width/2, width, height);
                         
-                        ctx.font = "30px Arial";
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.fillStyle = "white";
+                        ctx.font = "600 23px Inter";
+                        ctx.textAlign = "right";
+                        ctx.textBaseline = "top";
+                        ctx.fillStyle = "black";
                         ctx.strokeStyle = "black";
                         ctx.lineWidth = 5;
-                        ctx.fillText(""+this.numBeepers, center[0], center[1]);
+                        ctx.fillText(""+this.numBeepers, top_right[0]-0.15*this.width, top_right[1]+0.15*this.width);
                     }
                 }
             }
@@ -423,30 +488,20 @@
             // robot.turnRight();
             // robot.move();
             function controls() {
-                let sprint = false;
-                let sprintMagnitude = sprint ? 2 : 1;
                 window.addEventListener("keydown", (e) => {
+                    let sprint = false;
                     if (e.repeat) return;
-                    sprint = false;
-                    if (e.shiftKey) sprint = true;
-                    if (e.key == "w") {
-                        for (let i = 0; i < sprintMagnitude; i++) {
-                            robot.move();
-                        }
+                    if (e.shiftKey) robot.isSprinting = true;
+                    let key = e.key.toLowerCase();
+
+                    if (key == "w") {
+                        robot.move();
                     }
-                    if (e.key == "a") {
-                        for (let i = 0; i < sprintMagnitude; i++) {
-                            robot.turnLeft();
-                        }
+                    if (key == "q") {
+                        robot.turnLeft();
                     }
-                    if (e.key == "d") {
-                        if (sprint) {
-                            for (let i = 0; i < sprintMagnitude; i++) {
-                                robot.turnLeft();
-                            }
-                        } else {
-                            robot.turnRight();
-                        }
+                    if (key == "e") {
+                        robot.turnRight();
                     }
                     console.log(`Key press detected: ${e.key}`);
                 });
