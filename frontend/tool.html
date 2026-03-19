@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Tool - Karel Code Generator</title>
-        <link rel="icon" src="images/favicon.png">
+        <link rel="icon" href="/frontend/images/karelography_logo.svg">
         <style>
             @import "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap";
             html, body {
@@ -121,6 +121,15 @@
                         //nothing
                     }
                 }
+                setDirection(direction) {
+                    let mapping = direction === "n" ? 0 : direction === "e" ? 1 : direction === "s" ? 2 : 3;
+                    let current = this.direction === "n" ? 0 : this.direction === "e" ? 1 : this.direction === "s" ? 2 : 3;
+                    for (let i = 0; i < (current-mapping+4)%4; i++) {
+                        this.history.push("t");
+                    }
+                    this.direction = direction;
+                }
+                // north to south 0 -> 2 north to west 0 -> 3
                 move() {
                     if (this.isSprinting) {
                         this.isSprinting = false;
@@ -148,6 +157,11 @@
                     }
                     this.resetIntersection(Intersection.city, 0, 0);
                     console.log(`Direction = ${this.direction}, Coords = ${this.x}, ${this.y}`);
+                }
+
+                moveAbsolute(direction) {
+                    this.setDirection(direction);
+                    this.move();
                 }
 
                 uTurn() {
@@ -506,7 +520,7 @@
                 }
             }
             let images = {};
-            async function init() {
+            async function run() {
                 images = await loadImages(source);
                 Intersection.initializeCity();
                 Intersection.resetAll();
@@ -517,7 +531,7 @@
 
                 controls();
             }
-            init();
+            run();
             
             
             // robot.move();
@@ -532,6 +546,19 @@
                     let key = e.key.toLowerCase();
 
                     if (key == "w") {
+                        robot.moveAbsolute("n");
+                    }
+                    if (key == "a") {
+                        robot.moveAbsolute("w");
+                    }
+                    if (key == "s") {
+                        robot.moveAbsolute("s");
+                    }
+                    if (key == "d") {
+                        robot.moveAbsolute("e");
+                    }
+
+                    if (key == "f") {
                         robot.move();
                     }
                     if (key == "q") {
@@ -545,6 +572,9 @@
                     }
                     if (key == "z") {
                         robot.pickBeeper();
+                    }
+                    if (key == "p") {
+                        console.log(robot.history);
                     }
                     console.log(`Key press detected: ${e.key}`);
                 });

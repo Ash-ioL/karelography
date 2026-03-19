@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Home - Karel Code Generator</title>
-        <link rel="icon" href="/frontend/images/favicon.png">
+        <link rel="icon" href="/frontend/images/karelography_logo.svg">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Bitcount+Grid+Double+Ink:wght@100..900&family=Bitcount+Prop+Double:wght@100..900&display=swap" rel="stylesheet">
@@ -58,6 +58,17 @@
                 justify-content: center;
                 flex-direction: column;
             }
+            div#left div {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            div#left div img#logo {
+                width: clamp(4rem, 1000vw, 10rem);
+                aspect-ratio: 1 / 1;
+            }
+            
             div#left h1 {
                 font-family: "Bitcount Prop Double";
                 color: rgb(0, 0, 0);
@@ -186,7 +197,9 @@
                 div#left img {
                     width: 3rem;
                 }
-
+                div#left div img#logo {
+                    aspect-ratio: 1 / 1;
+                }
                 div#right p {
                     font-size: 2rem;
                 }
@@ -212,7 +225,10 @@
     </head>
     <body>
         <div id="left">
+            <div>
+            <img id="logo" src = "/frontend/images/karelography_logo.svg">
             <h1>Karelography</h1>
+            </div>
             <h2>By <a href="https://github.com/Ash-ioL" target="_blank">Ash-ioL</a></h2>
             <a href="https://github.com/Ash-ioL/karelography" target="_blank"><img src="/frontend/images/github_logo.png"></a>
         </div>
