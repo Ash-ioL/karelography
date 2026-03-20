@@ -145,8 +145,24 @@
                 // north to south 0 -> 2 north to west 0 -> 3
                 move() {
                     if (this.direction === "s") {
-                         
+                        if (Intersection.city[this.y][this.x].horizontalWall) return;
                     }
+                    else if (this.direction === "n") {
+                        try{
+                            if (Intersection.city[this.y+1][this.x].horizontalWall) return;
+                        } catch {
+                            return;
+                        }
+                    }
+                    else if (this.direction == "e") {
+                        try {
+                            if (Intersection.city[this.y][this.x+1].verticalWall) return;
+                        } catch {
+                            return;
+                        }
+                    }
+                    else 
+                        if (Intersection.city[this.y][this.x].verticalWall) return;
                     if (this.isSprinting) {
                         this.isSprinting = false;
                         this.move();
@@ -268,34 +284,7 @@
                     let area = blockWidth * botWidth;
                     let top_corner = [center[0]-0.5*area, center[1]-0.5*area];
 
-                    // ctx.save();
-
                     ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
-
-                    // // ctx.globalCompositeOperation = "source-atop";
-                    // // ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
-                    // // ctx.fillRect(top_corner[0], top_corner[1], area, area);
-                    // // ctx.restore();
-
-                    // let imgData = ctx.getImageData(top_corner[0], top_corner[1], area, area);
-                    // for (let i = 0; i < imgData.data.length; i+=4) {
-                    //     imgData[i] = this.color[0];
-                    //     imgData[i+1] = this.color[1];
-                    //     imgData[i+2] = this.color[2];
-                    // }
-
-                    // ctx.putImageData(imgData, top_corner[0], top_corner[1]);
-
-                    // ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
-
-                    // ctx.globalCompositeOperation = "multiply";
-                    // ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
-                    // ctx.fillRect(top_corner[0], top_corner[1], area, area);
-
-                    // ctx.globalCompositeOperation = "destination-atop";
-                    // ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
-
-                    // ctx.globalCompositeOperation = "source-over";
                 }
             }
 
@@ -327,11 +316,15 @@
                 static streets = 10;
                 static city = [];
                 static cityBufferless = [];
+                static initialized = false;
                 
                 static blockWidth = dimensionBasis/Math.max(Intersection.avenues+1, Intersection.streets+1);
 
+                static wallWidth = 0.106811*Intersection.blockWidth;
+
                 static resetAll() {
                     ctx.clearRect(0, 0, c.width, c.height);
+                    this.addBufferBoundary();
                     for (let i of Intersection.city) {
                         for (let k of i) {
                             k.resetNoClear();
@@ -339,6 +332,10 @@
                     }
                 }
                 static resizeCity(newStreets, newAvenues) { 
+                    if (!Intersection.initialized) {
+                        Intersection.initialized = true;
+                        Intersection.initializeCity();
+                    }
                     let oldStreets = Intersection.streets;
                     let oldAvenues = Intersection.avenues;
                     let oldCity = Intersection.cityBufferless;
@@ -349,9 +346,12 @@
                     Intersection.streets = newStreets;
                     Intersection.avenues = newAvenues;
                     Intersection.blockWidth = dimensionBasis/Math.max(Intersection.avenues+1, Intersection.streets+1);
+                    Intersection.wallWidth = 0.106811*Intersection.blockWidth;
 
-                    c.width = Intersection.blockWidth*(newAvenues+1);
-                    c.height = Intersection.blockWidth*(newStreets+1);
+                    let addWidth = Intersection.wallWidth;
+
+                    c.width = Intersection.blockWidth*(newAvenues+1) + addWidth;
+                    c.height = Intersection.blockWidth*(newStreets+1) + addWidth;
                     c.style.width = `${100*(newAvenues+1)/Math.max((newAvenues+1), (newStreets+1))}cqw`;
                     c.style.height = `${100*(newStreets+1)/Math.max((newAvenues+1), (newStreets+1))}cqh`;
 
@@ -387,6 +387,9 @@
                     }
                     newCity.push(bufferRow);
                     Intersection.city = newCity;
+
+                    Intersection.addNormalBoundary();
+
                     Intersection.resetAll();
 
                     console.log(Intersection.city);
@@ -417,7 +420,33 @@
                             Intersection.cityBufferless.push(bufferLess);
                         }
                     }
+                    this.resetAll();
                 }
+
+                static addNormalBoundary() {
+                    for (let i = 0; i < Intersection.streets+1; i++) {
+                        Intersection.city[i][0].verticalWall = true;
+                    }
+                    for (let i of Intersection.city[0]) {
+                        i.horizontalWall = true;
+                    }
+                }
+
+                static addBufferBoundary() {
+                    let img = images["vertical_wall"];
+
+                    for (let i = 0; i < Intersection.streets+1; i++) {
+                        let corner = Intersection.city[i][Intersection.avenues].position(1, 1);
+                        ctx.drawImage(img, corner[0], corner[1], Intersection.blockWidth, Intersection.blockWidth);
+                    }
+
+                    img = images["horizontal_wall"]
+                    for (let i of Intersection.city[Intersection.streets]) {
+                        let corner = i.position(-1, 3);
+                        ctx.drawImage(img, corner[0], corner[1], Intersection.blockWidth, Intersection.blockWidth);
+                    }
+                }
+
                 constructor(avenue, street, buffer) { 
                     this.avenue = avenue;
                     this.street = street;
@@ -426,21 +455,24 @@
                     this.numBeepers = 0;
                     this.horizontalWall = false;
                     this.verticalWall = false;
-                    this.coords = [avenue*Intersection.blockWidth, ((Intersection.streets)-street)*Intersection.blockWidth];
+                    this.coords = this.resetCoords();
                     this.hasRobot = robot.getPose()[0] === this.avenue && robot.getPose()[1] === this.street;
                 }
                 // clear the intersection before drawing instead of overlapping
                 reset() {
                     ctx.clearRect(this.minX(), this.minY(), this.width, this.width);
 
-                    this.coords = [this.avenue*Intersection.blockWidth, ((Intersection.streets)-this.street)*Intersection.blockWidth];
+                    this.coords = this.resetCoords();
                     this.width = Intersection.blockWidth;
                     this.hasRobot = robot.getPose()[0] === this.avenue && robot.getPose()[1] === this.street;
 
                     this.draw();
                 }
+                resetCoords() {
+                    return [this.avenue*Intersection.blockWidth, ((Intersection.streets)-this.street)*Intersection.blockWidth+Intersection.wallWidth];
+                }
                 resetNoClear() {
-                    this.coords = [this.avenue*Intersection.blockWidth, ((Intersection.streets)-this.street)*Intersection.blockWidth];
+                    this.coords = this.resetCoords();
                     this.width = Intersection.blockWidth;
                     this.hasRobot = robot.getPose()[0] === this.avenue && robot.getPose()[1] === this.street;
 
@@ -567,10 +599,7 @@
             let images = {};
             async function run() {
                 images = await loadImages(source);
-                Intersection.initializeCity();
-                Intersection.resetAll();
                 Intersection.resizeCity(10, 10); // make sure not to resize before initialized
-                Intersection.city[0][0].setContent("000");
                 Intersection.city[1][1].setContent("111");
                 console.log(Intersection.city[1][1].horizontalWall);
 
