@@ -54,7 +54,7 @@
             }
             canvas {
                 background-color: #ffffff;
-                border: 2px solid black;
+                /* border: 2px solid black; */
                 width: 100cqw;
                 height: 100cqh;
             }
@@ -534,13 +534,22 @@
                     let center = this.position(0, 0);
                     let top_left = this.position(-1, 1);
                     let top_right = this.position(1, 1);
-                    //top_left = [this.minX(), this.minY()];
+
                     // Draw the default grid lines
                     ctx.beginPath();
-                    ctx.strokeStyle = "red";
-                    if (this.buffer) ctx.strokeStyle = "orange";
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#6366f1";
+                    ctx.fillStyle = "#BDBFFF"
 
+                    if (this.buffer) {
+                        ctx.strokeStyle = "#BFBF15";
+                        ctx.fillStyle = "#F7F797";
+                    }
+                    ctx.lineWidth = 3;
+                    
+                    ctx.fillRect(top_left[0], top_left[1], this.width, this.width);
+                    ctx.fill();
+
+                    ctx.beginPath();
                     ctx.moveTo(center[0], this.minY());
                     ctx.lineTo(center[0], this.maxY());
                     ctx.moveTo(this.minX(), center[1]);
@@ -549,7 +558,7 @@
 
                     // Draw horizontal wall
                     if (this.horizontalWall) {
-                        let img = images["horizontal_wall"]
+                        let img = images["horizontal_wall"];
                         let width = this.width;
                         let height = this.width;
 
@@ -558,7 +567,7 @@
 
                     // Draw vertical wall
                     if (this.verticalWall) {
-                        let img = images["vertical_wall"]
+                        let img = images["vertical_wall"];
                         let width = this.width;
                         let height = this.width;
 
@@ -575,7 +584,7 @@
                         ctx.stroke();
                         ctx.fill();
 
-                        let img = images["beeper"]
+                        let img = images["beeper"];
                         let width = this.width/2;
                         let height = this.width/2;
 
