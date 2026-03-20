@@ -78,7 +78,8 @@
                 </canvas>
             </div>
             <div id="settings">
-
+                <label for="color-selector">Select Robot Color</label>
+                <input type="color" id="color-selector">
             </div>
         </div>
 
@@ -107,7 +108,19 @@
                     this.y = y;
                     this.direction = direction; 
                     this.numBeepers = numBeepers; // can be Inifnity
-                    this.color = color;
+                    this.color = [255, 255, 255];
+                    document.getElementById("color-selector").addEventListener("change", (val) => {
+                        let myColor = val.target.value;
+                        myColor = myColor.replace("#", "");
+                        console.log(myColor);
+                        for (let i = 0; i < 3; i++) {
+                            let hex = myColor.substring(i*2, i*2+2);
+                            let intOne = parseInt(hex[0], 16);
+                            let intTwo = parseInt(hex[1], 16);
+                            this.color[i] = intOne*16 + intTwo;
+                        }
+                        Intersection.city[this.y][this.x].reset();
+                    });
                     this.history = []
                     this.isSprinting = false;
                 }
@@ -131,6 +144,9 @@
                 }
                 // north to south 0 -> 2 north to west 0 -> 3
                 move() {
+                    if (this.direction === "s") {
+                         
+                    }
                     if (this.isSprinting) {
                         this.isSprinting = false;
                         this.move();
@@ -217,7 +233,7 @@
                     this.resetIntersection(Intersection.city, 0, 0);
                 }
                 putBeeper() {
-                    if (Intersection.city[robot.x][robot.y].buffer) return;
+                    if (Intersection.city[robot.y][robot.x].buffer) return;
                     if (robot.numBeepers <= 0) return;
                     robot.numBeepers -= 1;
                     Intersection.city[this.y][this.x].increaseBeeper(1);
@@ -251,7 +267,35 @@
                     let botWidth = 0.6;
                     let area = blockWidth * botWidth;
                     let top_corner = [center[0]-0.5*area, center[1]-0.5*area];
+
+                    // ctx.save();
+
                     ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
+
+                    // // ctx.globalCompositeOperation = "source-atop";
+                    // // ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
+                    // // ctx.fillRect(top_corner[0], top_corner[1], area, area);
+                    // // ctx.restore();
+
+                    // let imgData = ctx.getImageData(top_corner[0], top_corner[1], area, area);
+                    // for (let i = 0; i < imgData.data.length; i+=4) {
+                    //     imgData[i] = this.color[0];
+                    //     imgData[i+1] = this.color[1];
+                    //     imgData[i+2] = this.color[2];
+                    // }
+
+                    // ctx.putImageData(imgData, top_corner[0], top_corner[1]);
+
+                    ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
+
+                    ctx.globalCompositeOperation = "multiply";
+                    ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
+                    ctx.fillRect(top_corner[0], top_corner[1], area, area);
+
+                    ctx.globalCompositeOperation = "destination-atop";
+                    ctx.drawImage(img, top_corner[0], top_corner[1], area, area);
+
+                    ctx.globalCompositeOperation = "source-over";
                 }
             }
 
@@ -263,6 +307,7 @@
                 return new Promise(resole => {
                     for (let key of sources) {
                         let img = new Image();
+                        img.crossOrigin = "anonymous";
                         img.src = imgRoot+key+".png";
 
                         img.onload = () => {
@@ -422,14 +467,14 @@
                         return false;
                     }
                 }
-                horizontalWall(condition) {
+                setHorizontalWall(condition) {
                     if (condition) {
                         this.horizontalWall = true;
                     } else {
                         this.horizontalWall = false;
                     }
                 }
-                verticalWall(condition) {
+                setVerticalWall(condition) {
                     if (condition) {
                         this.verticalWall = true;
                     } else {
