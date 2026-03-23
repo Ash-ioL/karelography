@@ -1,18 +1,17 @@
-from flask import Flask
+from flask import Flask, render_template
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
 num_row = 0
 num_cols = 0
 
 @app.route("/")
 def home():
-    with open("frontend/index.html") as f:
-        return f.read()
+    return render_template("tool.html")
 
 @app.route("/tool")
 def tool():
-    with open("frontend/tool.html") as f:
-        return f.read().replace("tobereplaced1", "500").replace("tobereplaced2", "500")
+    return render_template("tool.html")
+    
 if __name__ == "__main__":
-    app.run(port=2000, debug=True)
+    app.run(port=2010, debug=True)
