@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Tool - Karel Code Generator</title>
-        <link rel="icon" href="/frontend/images/logos_banners/karelography_logo.svg">
+        <link rel="icon" href="{{ url_for('karelography_logo.svg') }}">
         <style>
             @import "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap";
             html, body {
@@ -91,7 +91,7 @@
             c.style.width = "100cqw";
             c.style.height = "100cqh";
             let ctx = c.getContext('2d');
-            let imgRoot = "/frontend/images/";
+            let imgRoot = "";
             let source = [
                 "robot_north",
                 "robot_south",
@@ -289,6 +289,7 @@
             }
 
             robot = new Robot(0, 0, "e", 4, "red");
+
             function loadImages(sources) {
                 let images = {};
                 let loaded = 0;
@@ -296,8 +297,8 @@
                 return new Promise(resole => {
                     for (let key of sources) {
                         let img = new Image();
-                        img.crossOrigin = "anonymous";
-                        img.src = imgRoot+key+".png";
+                        //img.crossOrigin = "anonymous";
+                        img.src = '{{ url_for(imgRoot+key+".png") }}';
 
                         img.onload = () => {
                             loaded++;
