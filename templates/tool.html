@@ -80,6 +80,9 @@
             <div id="settings">
                 <label for="color-selector">Select Robot Color</label>
                 <input type="color" id="color-selector">
+                <button id="copy-save">Copy Path</button>
+                <input type="text" id="load-save" name="load-save">
+                <button id="get-code">Get Code</button>
             </div>
         </div>
 
@@ -103,24 +106,73 @@
             ];
             
             class Robot {
+                static pathMap = {
+                    t: "robot.turnLeft();",
+                    m: "robot.move();",
+                    i: "robot.pickBeeper();",
+                    o: "robot.putBeeper();"
+                }
+                static skeleton = `
+                    import kareltherobot.*;
+                    import static kareltherobot.Directions;
+
+                    public class myClass {
+                        static {
+                            World.setDelay(0);
+                            World.loadWorld(worldName);
+                            World.setVisible(true);
+                        }
+                        static Robot robot = new Robot(robotLocation);
+                        public static void main(String[] args) {
+                            // Your robot code goes here
+                        }
+                    }
+                `;
                 constructor(x, y, direction, numBeepers, color) {
                     this.x = x;
                     this.y = y;
                     this.direction = direction; 
                     this.numBeepers = numBeepers; // can be Inifnity
                     this.color = [255, 255, 255];
+                    this.past = false;
                     document.getElementById("color-selector").addEventListener("change", (val) => {
-                        let myColor = val.target.value;
-                        myColor = myColor.replace("#", "");
-                        console.log(myColor);
-                        for (let i = 0; i < 3; i++) {
-                            let hex = myColor.substring(i*2, i*2+2);
-                            let intOne = parseInt(hex[0], 16);
-                            let intTwo = parseInt(hex[1], 16);
-                            this.color[i] = intOne*16 + intTwo;
-                        }
-                        Intersection.city[this.y][this.x].reset();
+                        //let myColor = val.target.value;
+                        //myColor = myColor.replace("#", "");
+                        //console.log(myColor);
+                        //for (let i = 0; i < 3; i++) {
+                        //    let hex = myColor.substring(i*2, i*2+2);
+                        //    let intOne = parseInt(hex[0], 16);
+                        //    let intTwo = parseInt(hex[1], 16);
+                        //    this.color[i] = intOne*16 + intTwo;
+                        //}
+                        //Intersection.city[this.y][this.x].reset();
                     });
+                    document.getElementById("copy-save").addEventListener("click", ()=>{
+                        let copyText = "";
+                        for (let i of this.history) {
+                            copyText+=i;
+                        }
+                        navigator.clipboard.writeText(copyText);
+                        console.log(this.history);
+                    });
+                    document.getElementById("load-save").addEventListener("keydown", (ky)=>{
+                        if (ky.key === "Enter") {
+                            this.history = [];
+                            for (let i of document.getElementById("load-save").value) {
+                                this.history.push(i);
+                            }
+                            console.log(this.history);
+                            document.getElementById("load-save").value="";
+                        }
+                    });
+                    document.getElementById("get-code").addEventListener("click", ()=> {
+                        let res = "";
+                        for (let i of this.history) {
+                            res+=Robot.pathMap[i]+"\n";
+                        }
+                        navigator.clipboard.writeText(res);
+                    });
+
                     this.history = []
                     this.isSprinting = false;
                 }
@@ -624,7 +676,9 @@
             // robot.move();
             function controls() {
                 window.addEventListener("keydown", (e) => {
-                    let sprint = false;
+                    if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
+                        return;
+                    }
                     if (e.repeat) return;
                     if (e.shiftKey) robot.isSprinting = true;
                     let key = e.key.toLowerCase();
