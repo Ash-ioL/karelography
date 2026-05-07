@@ -9,9 +9,13 @@ num_cols = 0
 def home():
     return render_template("index.html")
 
-@app.route("/tool")
-def tool():
-    return render_template("tool.html")
+@app.route("/path-builder")
+def path():
+    return render_template("path-builder.html")
+
+@app.route("/map-builder")
+def map():
+    return render_template("map-builder.html")
     
 if __name__ == "__main__":
     app.run(port=2010, debug=True)
