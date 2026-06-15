@@ -227,11 +227,11 @@
     <body>
         <div id="left">
             <div>
-            <img id="logo" src = "{{ url_for('static', filename='karelography_vertical_banner_transparent.svg') }}">
+            <img id="logo" src = "{{ url_for('static', filename='images/logos/karelography_vertical_banner_transparent.svg') }}">
             <h1>Karelography</h1>
             </div>
             <h2>By <a href="https://github.com/Ash-ioL" target="_blank">Ash-ioL</a></h2>
-            <a href="https://github.com/Ash-ioL/karelography" target="_blank"><img id="github" src=" {{ url_for('static', filename='github_logo.png') }}"></a>
+            <a href="https://github.com/Ash-ioL/karelography" target="_blank"><img id="github" src=" {{ url_for('static', filename='images/logos/github_logo.png') }}"></a>
         </div>
         <div id="right">
             <p>Generate your robot paths</p>
@@ -240,7 +240,7 @@
                 <li id="two">with efficiency</li>
                 <li id="three">with amazingness</li>
             </ul>
-            <a href="{{ url_for('path') }}">Try Now!</a>
+            <a href="{{ url_for('path')}}">Try Now!</a>
         </div>
     </body>
 </html>
